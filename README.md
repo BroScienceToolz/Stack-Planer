@@ -4,7 +4,7 @@ Ein Rechenmodell, das dir ausrechnet, wie alt du wirst. Ungefaehr. Vermutlich. W
 
 Eine einzige HTML-Datei, ca. 69 KB, laeuft im Browser, schickt nichts irgendwohin, speichert nichts, braucht kein Internet und keine Anmeldung. Doppelklick, fertig.
 
-**➜ [Hier geht's direkt zum Rechner](https://BENUTZERNAME.github.io/stack-planer/)**
+**➜ [Hier geht's direkt zum Rechner](https://brosciencetoolz.github.io/Stack-Planer/)**
 
 ---
 
