@@ -1,0 +1,359 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stack-Planer</title>
+<style>
+:root{--bg:#f6f7f9;--fg:#1b1f24;--muted:#667085;--linie:#dfe3e8;--karte:#fff;
+--blau:#1f4e78;--gruen:#0b7a3b;--gelb:#9c6500;--rot:#b42318;--gelbBg:#fff6da;
+--gruenBg:#e6f4ea;--rotBg:#fdecea;--blauBg:#e8f0f7;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:0 12px 90px}
+header{position:sticky;top:0;z-index:20;background:var(--bg);
+padding:8px 0 6px;border-bottom:1px solid var(--linie)}
+.ergebnis{display:flex;gap:8px}
+.karte{flex:1;border-radius:12px;padding:9px 10px;text-align:center;line-height:1.15}
+.karte b{display:block;font-size:26px;font-weight:700}
+.karte span{font-size:11px;letter-spacing:.02em;text-transform:uppercase}
+.jetzt{background:var(--gelbBg);color:var(--gelb)}
+.nach{background:var(--gruenBg);color:var(--gruen)}
+.punkte{font-size:11px;color:var(--muted);text-align:center;padding:5px 0 0}
+h2{font-size:15px;margin:20px 0 8px;color:var(--blau);display:flex;
+align-items:center;justify-content:space-between;gap:10px}
+/* Zuruecksetzen: klein, grau, rechts in der Ueberschrift. Ohne JavaScript
+   bleibt der Knopf ausgegraut - ein toter Knopf ist schlimmer als keiner. */
+.rs{flex:none;font-family:inherit;font-size:11px;font-weight:600;line-height:1;
+color:var(--muted);background:#fff;border:1px solid var(--linie);border-radius:7px;
+padding:7px 9px;cursor:pointer;white-space:nowrap}
+.rs:disabled{opacity:.4;cursor:default}
+.rs.alles{color:var(--rot);border-color:#f3c0bb}
+.box{background:var(--karte);border:1px solid var(--linie);border-radius:12px;
+padding:10px 12px;margin-bottom:10px}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+select,input[type=number]{width:100%;padding:11px 10px;font-size:16px;
+border:1px solid var(--linie);border-radius:9px;background:#fff;color:var(--fg);
+appearance:none;-webkit-appearance:none}
+.reihe{display:flex;gap:8px}.reihe>*{flex:1;min-width:0}
+.plan div{display:flex;justify-content:space-between;gap:10px;align-items:baseline;
+padding:9px 10px;border-radius:9px;margin-bottom:5px;background:#f2f4f7}
+.plan .top{background:var(--gruenBg)}
+.plan .n{font-weight:600;font-size:14px}
+.plan .k{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.plan .g{white-space:nowrap;font-weight:700;color:var(--gruen);font-size:13px}
+.sys{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px}
+.sys .nm{width:34%;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{flex:1;height:9px;background:#eceff3;border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px}
+.sys .v{width:38px;text-align:right;color:var(--muted);flex:none}
+.sys.top3 .nm{color:var(--rot);font-weight:700}
+.sub{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--linie)}
+.sub:first-child{border-top:none}
+.sub .nm{flex:1;min-width:0;font-size:13.5px}
+.sub .kl{display:block;font-size:10.5px;color:var(--muted)}
+.sub.lastst .nm{color:var(--rot)}
+.tog{width:58px;height:32px;flex:none;border:1px solid var(--linie);border-radius:8px;
+background:#fff;font-size:11px;color:var(--muted);font-weight:700}
+.tog.an{background:var(--blau);border-color:var(--blau);color:#fff}
+.tog.an.gp{background:var(--gruen);border-color:var(--gruen)}
+.gewinn{width:38px;flex:none;text-align:right;font-size:11.5px;color:var(--gruen);font-weight:700}
+.sub.rang{background:var(--gruenBg);border-radius:8px;padding-left:6px;padding-right:6px}
+.sub.rang .nm{font-weight:700}
+.sub .rz{width:16px;flex:none;font-size:11px;color:var(--gruen);font-weight:700;text-align:center}
+.nojs{background:var(--rotBg);border:1px solid #f3c0bb;border-radius:10px;
+padding:10px 12px;font-size:12.5px;color:#8a2018;margin:10px 0}
+details{margin:8px 0}
+summary{cursor:pointer;font-size:12.5px;color:var(--blau);padding:6px 0}
+details p{font-size:12.5px;color:var(--muted);margin:5px 0}
+.warn{background:var(--gelbBg);border:1px solid #f0d999;border-radius:10px;
+padding:9px 11px;font-size:12px;color:#7a5200;margin:10px 0}
+.such{width:100%;padding:10px;font-size:14px;border:1px solid var(--linie);
+border-radius:9px;margin-bottom:6px}
+.pz{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;
+border-top:1px solid var(--linie)}
+.pz b{font-weight:700}
+footer{font-size:11px;color:var(--muted);text-align:center;padding:18px 0}
+</style>
+<div class="wrap">
+<header>
+  <div class="ergebnis">
+    <div class="karte jetzt"><span>jetzt</span><b><span id="eJetzt">&ndash;</span></b><span>Jahre</span></div>
+    <div class="karte nach"><span>nach Massnahmen</span><b><span id="eNach">&ndash;</span></b><span>Jahre</span></div>
+  </div>
+  <div class="punkte" id="pkt"></div>
+</header>
+
+<noscript><div class="nojs"><b>Diese Vorschau rechnet nicht.</b> Die Seite braucht
+JavaScript. Auf dem iPhone oeffnet die Vorschau in Mail oder der Dateien-App kein
+JavaScript &ndash; die Datei erst in Safari oeffnen (Teilen &rarr; In Safari oeffnen)
+oder auf einen Webspace legen und die Adresse aufrufen.</div></noscript>
+
+<div class="warn">Keine Therapieempfehlung. Ein Rechenmodell zu
+Unterhaltungszwecken. Die Einnahme von den aufgef&uuml;hrten Substanzen muss in
+Absprache mit &Auml;rzten und erfahrenen Coaches erfolgen.</div>
+
+<h2><span>1. Was l&auml;uft</span><button class="rs" data-reset="lauf" disabled
+    type="button">zur&uuml;cksetzen</button></h2>
+<div class="box">
+  <label>Gesamt-Load</label><select id="load"><option value="0" selected>Natty oder TRT (400-1000 ng/dl)</option><option value="1">TRT plus (1000-1400 ng/dl)</option><option value="2">Blast moderat (250-350 mg/Woche)</option><option value="3">Blast fortgeschritten (500-750 mg/Woche)</option><option value="4">Blast Profi (1 g und mehr)</option></select>
+  <label>Anwendungsart</label><select id="art"><option value="0" selected>Dauerblast (durchgehend)</option><option value="1">Blast and Cruise (Time On = Time Off)</option></select>
+  <div class="reihe">
+    <div><label>Geplante Dauer</label><select id="dauer"><option value="0">&lt;5 Jahre</option><option value="1">10 Jahre</option><option value="2" selected>15 Jahre</option><option value="3">bis dass der Tod uns scheidet</option></select></div>
+    <div><label>Alter</label><input type="number" id="alter" min="18" max="80"
+         value="30" inputmode="numeric"></div>
+  </div>
+  <details><summary>So bedienst du das</summary><p><b>Gesamt-Load:</b> was du an Testosteron und anderen Injizierbaren pro Woche insgesamt faehrst. Einzelne Stoffe hakst du unten in der Liste zusaetzlich ab - hier steht nur die Menge.</p><p><b>Warum gibt es Luecken bei der Dosierung?</b> Ein Sprung von 449 auf 450 mg macht nichts aus. Dazu kommt, dass Steroide generell plus/minus 20 Prozent streuen - lass es in einem Labor bestaetigen. Auch die beste Quelle bekommt mal eine schlechte Charge.</p><p><b>Anwendungsart:</b> Blast and Cruise zaehlt nur, wenn die Pause so lang ist wie der Block und dazwischen echtes TRT laeuft. Alles andere ist Dauerblast.</p><p><b>Geplante Dauer:</b> wie lange du das noch durchziehen willst. Das aendert die Punktzahl nicht, aber das Endalter - jedes Jahr unter Last kostet einzeln.</p><p><b>Alter:</b> dein heutiges. Ein Jahr unter Last mit 55 kostet mehr als eines mit 25, und wer aelter anfaengt, hat weniger Rest.</p><p>Alles rechnet sich sofort neu, sobald du etwas aenderst.</p></details>
+</div>
+
+<h2><span>2. Blutwerte</span><button class="rs" data-reset="blut" disabled
+    type="button">alle auf ungemessen</button></h2>
+<div class="box">
+  <label>Blutdruck systolisch (mmHg)</label><select data-blut="Blutdruck/RAAS"><option value="-1" selected>nicht gemessen</option><option value="0">unter 115</option><option value="1">115 bis 125</option><option value="2">125 bis 140</option><option value="3">ab 140</option></select><label>Haematokrit (%)</label><select data-blut="Haematokrit/Blutdicke"><option value="-1" selected>nicht gemessen</option><option value="0">unter 45</option><option value="1">45 bis 50</option><option value="2">50 bis 54</option><option value="3">ueber 54</option></select><label>LDL-Cholesterin (mmol/l)</label><select data-blut="Blutfette-LDL"><option value="-1" selected>nicht gemessen</option><option value="0">unter 1,4 (55 mg/dl)</option><option value="1">1,4 bis 2,6 (55-100 mg/dl)</option><option value="2">2,6 bis 3,4 (100-130 mg/dl)</option><option value="3">ueber 3,4 (ueber 130 mg/dl)</option></select><label>HDL-Cholesterin (mmol/l)</label><select data-blut="Blutfette-HDL"><option value="-1" selected>nicht gemessen</option><option value="0">ueber 1,3 (50 mg/dl)</option><option value="1">1,0 bis 1,3 (39-50 mg/dl)</option><option value="2">0,6 bis 1,0 (23-39 mg/dl)</option><option value="3">unter 0,6 (unter 23 mg/dl)</option></select><label>Triglyzeride (mmol/l)</label><select data-blut="Blutfette-TG"><option value="-1" selected>nicht gemessen</option><option value="0">unter 1,0 (89 mg/dl)</option><option value="1">1,0 bis 1,7 (89-150 mg/dl)</option><option value="2">1,7 bis 3,4 (150-300 mg/dl)</option><option value="3">ueber 3,4 (ueber 300 mg/dl)</option></select><label>Nuechternglukose (mg/dl)</label><select data-blut="Glukosestoffwechsel"><option value="-1" selected>nicht gemessen</option><option value="0">unter 80 (4,4 mmol/l)</option><option value="1">80 bis 95 (4,4-5,3 mmol/l)</option><option value="2">95 bis 110 (5,3-6,1 mmol/l)</option><option value="3">ab 110 (ab 6,1 mmol/l)</option></select><label>Cystatin C (mg/l oder Kreatinin-eGFR)</label><select data-blut="Nierenfunktion"><option value="-1" selected>nicht gemessen</option><option value="0">unter 0,80 (eGFR ueber 110)</option><option value="1">0,80 bis 1,00 (eGFR 85-110)</option><option value="2">1,00 bis 1,30 (eGFR 60-85)</option><option value="3">ueber 1,30 (eGFR unter 60)</option></select>
+  <details><summary>Warum du hier alles eintragen solltest</summary><p><b>Was nicht eingetragen ist, wird geschaetzt.</b> Fuer jeden Wert, der auf 'nicht gemessen' steht, unterstellt das Modell einen bevoelkerungstypischen Durchschnitt - also einen Mittelwert, der auf dich genauso gut oder schlecht passt wie auf jeden anderen. Das ist besser als nichts, aber es ist geraten.</p><p><b>Trag deshalb so viel ein wie du hast, und so genau wie moeglich.</b> Jeder echte Wert ersetzt eine Schaetzung durch dich.</p><p><b>Das oberste Band ist strenger als medizinische Leitlinien.</b> In der Medizin gelten teilweise hoehere Obergrenzen - aber das sind Behandlungsempfehlungen fuer kranke Menschen, keine Zielwerte fuer Menschen, die nicht krank werden wollen. Ein LDL von &lt;3 heisst nicht gut, es heisst: ab hier bekommt ein Kranker Tabletten. Dieses Modell rechnet Jahrzehnte nach vorn, und Werte wandern in dieser Zeit nach oben. Deshalb steht im obersten Band das Optimum und nicht die Schwelle - wer genau auf der Schwelle steht, steht in zehn Jahren darueber.</p><p>Mach das Blutbild morgens, nuechtern. Wenn der Kreatinin-Wert hoch ist, ist es haeufig eine Fehlinterpretation - bestimme beim naechsten Mal Cystatin C. Die aufgezeigten Werte sind laengst nicht alles. Lass dich von deinem Coach oder Arzt beraten.</p></details>
+</div>
+
+<h2><span>3. Was bringt am meisten</span><button class="rs" data-reset="geplant"
+    disabled type="button">geplant leeren</button></h2>
+<div class="box plan" id="plan"><div><span class="n">wird berechnet ...</span></div></div>
+
+<h2><span>4. Systeme</span><button class="rs alles" data-reset="alles" disabled
+    type="button">alles zur&uuml;cksetzen</button></h2>
+<div class="box">
+  <div style="font-size:12px;color:#b42318;font-weight:700;margin-bottom:6px"
+       id="glied"></div>
+  <div id="sys"></div>
+  <details><summary>Warum nicht einfach der Durchschnitt?</summary><p>Jedes System wird einzeln bewertet und erst danach zusammengefasst. Weil die Gefahrenkurve nach oben wegzieht, kann ein System am Anschlag von keinem gesunden Rest aufgewogen werden – ein gutes LDL hilft dem Herzmuskel nicht. Die drei schlimmsten stehen rot.</p></details>
+</div>
+
+<h2><span>5. Was du nimmst</span><button class="rs" data-reset="subs" disabled
+    type="button">alle H&auml;kchen weg</button></h2>
+<div class="box">
+  <input class="such" id="such" placeholder="suchen ..." autocomplete="off">
+  <div style="font-size:11.5px;color:#667085;margin-bottom:4px">
+    <b>l&auml;uft</b> = nimmst du schon &nbsp;&middot;&nbsp; <b>geplant</b> = willst du
+    dazunehmen. Die Liste ordnet sich nach dem, was gerade am meisten br&auml;chte.</div>
+  <div id="schutz"><div class="sub" data-name="5-alpha-Reduktase-Hemmer" data-i="0"><span class="rz"></span><span class="nm">5-alpha-Reduktase-Hemmer<span class="kl">5AR-Hemmer · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Bempedoinsaeure" data-i="1"><span class="rz"></span><span class="nm">Bempedoinsaeure<span class="kl">ACL-Hemmer · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Blutspende oder Aderlass" data-i="2"><span class="rz"></span><span class="nm">Blutspende oder Aderlass<span class="kl">Aderlass · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Aromatasehemmer" data-i="3"><span class="rz"></span><span class="nm">Aromatasehemmer<span class="kl">Aromatasehemmer · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Nebivolol (Betablocker)" data-i="4"><span class="rz"></span><span class="nm">Nebivolol (Betablocker)<span class="kl">Betablocker · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Amlodipin (Calciumantagonist)" data-i="5"><span class="rz"></span><span class="nm">Amlodipin (Calciumantagonist)<span class="kl">Calciumantagonist · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Ezetimib" data-i="6"><span class="rz"></span><span class="nm">Ezetimib<span class="kl">Cholesterin-Resorptionshemmer · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Salzreduktion" data-i="7"><span class="rz"></span><span class="nm">Salzreduktion<span class="kl">Ernaehrung · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="GLP-1- oder GLP-1/GIP-Agonist" data-i="8"><span class="rz"></span><span class="nm">GLP-1- oder GLP-1/GIP-Agonist<span class="kl">Inkretin · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Berberin oder Metformin" data-i="9"><span class="rz"></span><span class="nm">Berberin oder Metformin<span class="kl">Insulinsensitizer · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Leber-Supplemente (TUDCA, NAC)" data-i="10"><span class="rz"></span><span class="nm">Leber-Supplemente (TUDCA, NAC)<span class="kl">Leber-Supplement · Evidenz C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Ausdauertraining und Koerperfett runter" data-i="11"><span class="rz"></span><span class="nm">Ausdauertraining und Koerperfett runter<span class="kl">Lifestyle · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="OTC-Stack komplett" data-i="12"><span class="rz"></span><span class="nm">OTC-Stack komplett<span class="kl">OTC-Stack · Evidenz B/C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Omega-3 hochdosiert" data-i="13"><span class="rz"></span><span class="nm">Omega-3 hochdosiert<span class="kl">Omega-3 · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Tadalafil niedrig dosiert" data-i="14"><span class="rz"></span><span class="nm">Tadalafil niedrig dosiert<span class="kl">PDE5-Hemmer · Evidenz C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Cabergolin oder P5P" data-i="15"><span class="rz"></span><span class="nm">Cabergolin oder P5P<span class="kl">Prolaktin · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="ACE-Hemmer" data-i="16"><span class="rz"></span><span class="nm">ACE-Hemmer<span class="kl">RAAS-Blocker · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Sartan (ARB)" data-i="17"><span class="rz"></span><span class="nm">Sartan (ARB)<span class="kl">RAAS-Blocker · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="SERM (Tamoxifen, Raloxifen, Enclomifen)" data-i="18"><span class="rz"></span><span class="nm">SERM (Tamoxifen, Raloxifen, Enclomifen)<span class="kl">SERM · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="SGLT2-Hemmer" data-i="19"><span class="rz"></span><span class="nm">SGLT2-Hemmer<span class="kl">SGLT2 · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="PCSK9-Hemmer oder Inclisiran" data-i="20"><span class="rz"></span><span class="nm">PCSK9-Hemmer oder Inclisiran<span class="kl">Statin/PCSK9 · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="Statin" data-i="21"><span class="rz"></span><span class="nm">Statin<span class="kl">Statin/PCSK9 · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub" data-name="ASS niedrig dosiert" data-i="22"><span class="rz"></span><span class="nm">ASS niedrig dosiert<span class="kl">Thrombozytenhemmer · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div></div>
+  <div style="font-size:12px;color:#b42318;font-weight:700;margin:14px 0 2px">
+    Was nur schadet &ndash; kein Gesundheitsnutzen</div>
+  <div id="last"><div class="sub lastst" data-name="Nandrolon" data-i="0"><span class="rz"></span><span class="nm">Nandrolon<span class="kl">19-Nor · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Trenbolon" data-i="1"><span class="rz"></span><span class="nm">Trenbolon<span class="kl">19-Nor · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Alkohol (5 Bier pro Tag)" data-i="2"><span class="rz"></span><span class="nm">Alkohol (5 Bier pro Tag)<span class="kl">Alkohol · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Testosteron" data-i="3"><span class="rz"></span><span class="nm">Testosteron<span class="kl">Basis · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Clenbuterol" data-i="4"><span class="rz"></span><span class="nm">Clenbuterol<span class="kl">Beta-2-Agonist · Evidenz C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Drostanolon" data-i="5"><span class="rz"></span><span class="nm">Drostanolon<span class="kl">DHT-Derivat · Evidenz C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Primobolan (Methenolon)" data-i="6"><span class="rz"></span><span class="nm">Primobolan (Methenolon)<span class="kl">DHT-Derivat · Evidenz C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="DNP" data-i="7"><span class="rz"></span><span class="nm">DNP<span class="kl">Entkoppler · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Insulin" data-i="8"><span class="rz"></span><span class="nm">Insulin<span class="kl">Insulin · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Methandienon" data-i="9"><span class="rz"></span><span class="nm">Methandienon<span class="kl">Oral 17-aa · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Oxandrolon" data-i="10"><span class="rz"></span><span class="nm">Oxandrolon<span class="kl">Oral 17-aa · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Oxymetholon" data-i="11"><span class="rz"></span><span class="nm">Oxymetholon<span class="kl">Oral 17-aa · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Stanozolol" data-i="12"><span class="rz"></span><span class="nm">Stanozolol<span class="kl">Oral 17-aa · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Turinabol" data-i="13"><span class="rz"></span><span class="nm">Turinabol<span class="kl">Oral 17-aa · Evidenz C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Wachstumshormon (hGH)" data-i="14"><span class="rz"></span><span class="nm">Wachstumshormon (hGH)<span class="kl">Peptidhormon · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Rauchen (10 Zigaretten pro Tag)" data-i="15"><span class="rz"></span><span class="nm">Rauchen (10 Zigaretten pro Tag)<span class="kl">Rauchen · Evidenz A</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="SARM (RAD-140, LGD-4033, Ostarin)" data-i="16"><span class="rz"></span><span class="nm">SARM (RAD-140, LGD-4033, Ostarin)<span class="kl">SARM · Evidenz C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="T3 (Liothyronin)" data-i="17"><span class="rz"></span><span class="nm">T3 (Liothyronin)<span class="kl">Schilddruesenhormon · Evidenz B</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div><div class="sub lastst" data-name="Boldenon" data-i="18"><span class="rz"></span><span class="nm">Boldenon<span class="kl">Sonstige AAS · Evidenz C</span></span><span class="gewinn"></span><button class="tog" data-t="l">läuft</button><button class="tog gp" data-t="g">geplant</button></div></div>
+</div>
+
+<details><summary>Parameter und Rechenweg</summary><p>Punkte 80 heisst Durchschnitt und Endalter 88. Jedes System bekommt einen eigenen Gefahrenfaktor ((1&nbsp;&minus;&nbsp;Basisindex) / (1&nbsp;&minus;&nbsp;Endindex)) hoch Schaerfe; der Mittelwert daraus laesst die Lebensuhr schneller laufen. Zum Nachstellen sind die Werte hier fest eingebaut – wer sie aendern will, nimmt die Excel-Mappe.</p><div class="pz"><span>Natty oder TRT (400-1000 ng/dl)</span><b>1.00</b></div><div class="pz"><span>TRT plus (1000-1400 ng/dl)</span><b>2.10</b></div><div class="pz"><span>Blast moderat (250-350 mg/Woche)</span><b>3.00</b></div><div class="pz"><span>Blast fortgeschritten (500-750 mg/Woche)</span><b>5.00</b></div><div class="pz"><span>Blast Profi (1 g und mehr)</span><b>8.00</b></div><div class="pz"><span>Schaerfe</span><b>1.15</b></div><div class="pz"><span>Stapelhebel</span><b>1.5</b></div><div class="pz"><span>Gewicht des schwaechsten Glieds</span><b>1.0</b></div><div class="pz"><span>Restspielraum bei Index 1</span><b>0.05</b></div><div class="pz"><span>Schadensbudget eines Lebens</span><b>97.0</b></div><div class="pz"><span>Jahresfaktor: linear</span><b>0.005</b></div><div class="pz"><span>Jahresfaktor: Zinseszins</span><b>1.005</b></div><div class="pz"><span>Lebenserwartung ohne Last</span><b>88</b></div></details>
+
+<footer>Stack-Planer &middot; Modellstand 23.0 &middot; rechnet vollstaendig im
+Browser, es wird nichts gesendet und nichts gespeichert.<br>
+F&uuml;r Fragen und Anregungen:
+<a href="mailto:BroScienceToolz@gmail.com">BroScienceToolz@gmail.com</a></footer>
+</div>
+<script>
+// Aeltere Safari-Versionen kennen Element.closest nicht. Ein Zeilen-Notnagel,
+// damit das Antippen der Schalter auch dort ankommt.
+if(typeof Element!=='undefined'&&!Element.prototype.closest){Element.prototype.closest=function(sel){
+  var e=this; while(e&&e.nodeType===1){if(e.matches&&e.matches(sel))return e;
+  e=e.parentElement;} return null;};}
+const D={"kats": [{"name": "Blutdruck/RAAS", "kurz": "Blutdruck", "w": 8.3333333333, "sens": 1.0}, {"name": "Blutfette-HDL", "kurz": "HDL", "w": 8.3333333333, "sens": 1.0}, {"name": "Blutfette-LDL", "kurz": "LDL", "w": 8.3333333333, "sens": 1.0}, {"name": "Gefaesse/Atherosklerose", "kurz": "Gefaesse", "w": 8.3333333333, "sens": 0.5}, {"name": "Gefaesswand/Aorta/Lunge", "kurz": "Aorta/Lunge", "w": 8.3333333333, "sens": 0.5}, {"name": "Haematokrit/Blutdicke", "kurz": "Haematokrit", "w": 8.3333333333, "sens": 1.0}, {"name": "Herzmuskel/Hypertrophie", "kurz": "Herzmuskel", "w": 8.3333333333, "sens": 1.0}, {"name": "Psyche", "kurz": "Psyche", "w": 8.3333333333, "sens": 1.0}, {"name": "Thrombose/Blutgerinnung", "kurz": "Thrombose", "w": 8.3333333333, "sens": 1.0}, {"name": "Blutfette-TG", "kurz": "Triglyzeride", "w": 4.1666666667, "sens": 1.0}, {"name": "Glukosestoffwechsel", "kurz": "Glukose", "w": 4.1666666667, "sens": 1.0}, {"name": "Herzrhythmus", "kurz": "Rhythmus", "w": 4.1666666667, "sens": 0.5}, {"name": "Leber allgemein", "kurz": "Leber allg.", "w": 4.1666666667, "sens": 1.0}, {"name": "Nierenfunktion", "kurz": "Niere", "w": 4.1666666667, "sens": 0.5}, {"name": "Aromatase/E2", "kurz": "E2", "w": 2.0833333333, "sens": 0.5}, {"name": "Blutfette-Lp(a)", "kurz": "Lp(a)", "w": 2.0833333333, "sens": 0.0}], "idxBasis": 0.2, "load": [{"t": "Natty oder TRT (400-1000 ng/dl)", "v": 1.0}, {"t": "TRT plus (1000-1400 ng/dl)", "v": 2.1}, {"t": "Blast moderat (250-350 mg/Woche)", "v": 3.0}, {"t": "Blast fortgeschritten (500-750 mg/Woche)", "v": 5.0}, {"t": "Blast Profi (1 g und mehr)", "v": 8.0}], "art": [{"t": "Dauerblast (durchgehend)", "v": 1.0}, {"t": "Blast and Cruise (Time On = Time Off)", "v": 0.6}], "dauer": [{"t": "<5 Jahre", "j": 5}, {"t": "10 Jahre", "j": 10}, {"t": "15 Jahre", "j": 15}, {"t": "bis dass der Tod uns scheidet", "j": 999}], "blut": [{"name": "Blutdruck systolisch", "kat": "Blutdruck/RAAS", "code": "BD", "einheit": "mmHg", "baender": ["unter 115", "115 bis 125", "125 bis 140", "ab 140"], "hinweis": "In Ruhe und an mehreren Tagen gemessen, nicht direkt nach dem Training. Das Risiko steigt in den grossen Kohorten durchgehend ab 115/75 mmHg - es gibt keinen Sockel, unterhalb dessen es egal waere, deshalb liegt das Optimum unter 115. Die ESC nennt ab 120 erhoeht und ab 140 Bluthochdruck; ab 140 steht hier der Endlevel, weil dort gehandelt werden muss und nicht erst bei Grad 2 (160)."}, {"name": "Haematokrit", "kat": "Haematokrit/Blutdicke", "code": "HK", "einheit": "%", "baender": ["unter 45", "45 bis 50", "50 bis 54", "ueber 54"], "hinweis": "Der Wert, wegen dem die Blutspende auf dem Plan steht. 45 und 48 sind nicht dasselbe: die Blutviskositaet steigt oberhalb von rund 45 Prozent ueberproportional, und schon innerhalb des Normbereichs haben die oberen Quartile mehr Thrombosen und Herzereignisse. Deshalb liegt das Optimum unter 45, auch wenn 52 offiziell noch normal ist. Ab 48 wuerde kein Arzt eine Testosterontherapie neu beginnen, ueber 54 heisst es in der Leitlinie: Dosis runter, absetzen oder Aderlass. Nach unten hat der Wert eine Grenze, die das Modell nicht kennt - unter 38 wird es Blutarmut."}, {"name": "LDL-Cholesterin", "kat": "Blutfette-LDL", "code": "LDL", "einheit": "mmol/l", "baender": ["unter 1,4 (55 mg/dl)", "1,4 bis 2,6 (55-100 mg/dl)", "2,6 bis 3,4 (100-130 mg/dl)", "ueber 3,4 (ueber 130 mg/dl)"], "hinweis": "Das Optimum ist der ESC/EAS-Zielwert fuer SEHR hohes Risiko: unter 1,4 mmol/l (55 mg/dl). Genau dort steht ein langjaehriger Nutzer, und eine untere Schwelle, ab der es nicht mehr besser wird, ist bis heute nicht gefunden worden - ein Neugeborenes hat rund 30 mg/dl. 1,8 (70 mg/dl) ist die Behandlungsschwelle bei hohem Risiko, kein Optimum. Der Endlevel liegt bei 3,4 (130 mg/dl), nicht erst bei 4,1 (160): 160 ist die Marke fuer eine manifeste Hypercholesterinaemie, und als Alarm ist das zu spaet. Hier bringt ein Statin am meisten."}, {"name": "HDL-Cholesterin", "kat": "Blutfette-HDL", "code": "HDL", "einheit": "mmol/l", "baender": ["ueber 1,3 (50 mg/dl)", "1,0 bis 1,3 (39-50 mg/dl)", "0,6 bis 1,0 (23-39 mg/dl)", "unter 0,6 (unter 23 mg/dl)"], "hinweis": "ACHTUNG umgekehrte Richtung: hier ist HOCH gut. Unter 1,0 mmol/l (40 mg/dl) gilt beim Mann als erniedrigt, aber der Risikoabfall geht bis rund 1,5 (60 mg/dl) weiter - deshalb liegt das Optimum ueber 1,3 (50 mg/dl) und nicht knapp ueber der Grenze zum Krankhaften. Der Endlevel liegt bei 0,6 (23 mg/dl): wer bei 0,4 ankommt, braucht keine Warnung mehr. Sehr hohe Werte ueber 2,3 (90 mg/dl) sind uebrigens auch nicht besser, aber das ist nicht das Problem dieser Gruppe."}, {"name": "Triglyzeride", "kat": "Blutfette-TG", "code": "TG", "einheit": "mmol/l", "baender": ["unter 1,0 (89 mg/dl)", "1,0 bis 1,7 (89-150 mg/dl)", "1,7 bis 3,4 (150-300 mg/dl)", "ueber 3,4 (ueber 300 mg/dl)"], "hinweis": "Nuechtern gemessen, sonst ist der Wert wertlos. 1,7 mmol/l (150 mg/dl) heisst nur noch normal; das Optimum liegt unter 1,0 (89 mg/dl), und dort sitzen auch die Leute mit der besten Insulinlage. Der Endlevel steht bei 3,4 (300 mg/dl) - die 5,6 (500 mg/dl), ab denen die Bauchspeicheldruese gefaehrdet ist, sind der Notfall, und ein Notfall ist keine Warnung mehr."}, {"name": "Nuechternglukose", "kat": "Glukosestoffwechsel", "code": "GLU", "einheit": "mg/dl", "baender": ["unter 80 (4,4 mmol/l)", "80 bis 95 (4,4-5,3 mmol/l)", "95 bis 110 (5,3-6,1 mmol/l)", "ab 110 (ab 6,1 mmol/l)"], "hinweis": "Nuechtern heisst acht Stunden nichts gegessen. Der Risikoanstieg beginnt in den Kohorten deutlich vor 100 mg/dl, also vor der offiziellen Praediabetesgrenze - deshalb liegt das Optimum unter 80. Nach ADA ist 100 bis 125 mg/dl Praediabetes und ab 126 Diabetes; der Endlevel steht hier schon bei 110, wo die WHO von einer gestoerten Nuechternglukose spricht. Eine Warnung, die auf die Diagnose wartet, ist keine mehr. Alternativ HbA1c: unter 5,0 / 5,0 bis 5,4 / 5,4 bis 5,8 / ab 5,8 Prozent."}, {"name": "Cystatin C", "kat": "Nierenfunktion", "code": "CYS", "einheit": "mg/l oder Kreatinin-eGFR", "baender": ["unter 0,80 (eGFR ueber 110)", "0,80 bis 1,00 (eGFR 85-110)", "1,00 bis 1,30 (eGFR 60-85)", "ueber 1,30 (eGFR unter 60)"], "hinweis": "Besser als Kreatinin, weil unabhaengig von der Muskelmasse - bei Kraftsportlern ist Kreatinin systematisch zu hoch. Die Klammerwerte sind die eGFR nach CKD-EPI fuer einen 40-jaehrigen Mann. Der Normbereich reicht bis 1,0, aber Sterblichkeit und Herzereignisse steigen schon innerhalb davon - deshalb liegt das Optimum unter 0,80. Der Endlevel steht bei 1,30, also bei eGFR 60: das ist die Grenze zur chronischen Nierenerkrankung und nicht erst Stadium G3b. WENN DU KEIN CYSTATIN C HAST: nimm die eGFR aus dem Kreatinin und ordne sie nach den Klammerwerten ein - ungenau ist besser als gar nichts. Sie faellt bei viel Muskel aber systematisch zu schlecht aus, weil Kreatinin aus dem Muskel kommt. Sieht sie schlecht aus, lass Cystatin C nachbestimmen, bevor aus einer Muskelmasse eine Nierenerkrankung wird."}], "messIndex": [0.0, 0.4, 0.75, 1.0], "massnahmeStufe": [0.0, 0.4, 0.75, 1.0], "subs": [{"name": "5-alpha-Reduktase-Hemmer", "klasse": "5AR-Hemmer", "last": false, "evidenz": "A", "text": "ZWEISCHNEIDIG. Weniger DHT heisst weniger androgener Druck auf den Herzmuskel - deshalb steht dort ein Plus. Dem gegenueber steht das groesste Psyche-Minus dieser Liste: anhaltende Depression, Anhedonie und Libidoverlust nach dem Absetzen sind gut dokumentiert, und es gibt ein Suizidalitaets-Signal. Wer dazu neigt oder eine Vorgeschichte hat, bespricht das vorher mit einem Arzt und nicht mit dem Coach.", "ziel": "Kein Laborziel - der Effekt zeigt sich am Haaransatz, nicht im Blut.", "wirkung": {"Psyche": -0.35, "Herzmuskel/Hypertrophie": 0.15}, "kopplung": {}}, {"name": "Bempedoinsaeure", "klasse": "ACL-Hemmer", "last": false, "evidenz": "B", "text": "BESONDERHEIT: wird erst in der Leber aktiviert und erreicht den Muskel praktisch nicht. Damit faellt die Myopathie weg - fuer jemanden, der schwer trainiert, der eigentliche Punkt gegenueber dem Statin.", "ziel": "LDL unter 1,8 mmol/l.", "wirkung": {"Blutfette-LDL": 0.22, "Gefaesse/Atherosklerose": 0.12}, "kopplung": {"Blutfette-LDL": ["LDL", 0.0], "Gefaesse/Atherosklerose": ["LDL", 0.0]}}, {"name": "Blutspende oder Aderlass", "klasse": "Aderlass", "last": false, "evidenz": "B", "text": "Die direkteste und billigste Massnahme ueberhaupt. KOPPLUNG: Rest 0 - bei einem Haematokrit von 44 gibt es schlicht nichts abzulassen.", "ziel": "Haematokrit unter 47 Prozent, dabei Ferritin nicht unter 30.", "wirkung": {"Haematokrit/Blutdicke": 1.0}, "kopplung": {"Haematokrit/Blutdicke": ["HK", 0.0]}}, {"name": "Aromatasehemmer", "klasse": "Aromatasehemmer", "last": false, "evidenz": "B", "text": "Ein zu tief gedruecktes E2 kostet Stimmung, Antrieb, Gelenke, Knochendichte und HDL. Deshalb steht hier ein Psyche-Minus, obwohl der Stoff auf dem Papier ein Schutzmittel ist. Niedrigste wirksame Dosis, und nur mit Messwert.", "ziel": "E2 im Zielbereich, NICHT gecrasht. HDL dabei mitlaufen lassen.", "wirkung": {"Aromatase/E2": 0.65, "Blutfette-HDL": -0.2, "Psyche": -0.3}, "kopplung": {}}, {"name": "Nebivolol (Betablocker)", "klasse": "Betablocker", "last": false, "evidenz": "B", "text": "Der Betablocker mit NO-vermittelter Gefaesserweiterung und dem geringsten Einfluss auf die Blutfette. KOPPLUNG: die Rhythmuswirkung ist entkoppelt - die Frequenzkontrolle haengt nicht am Ausgangsblutdruck.", "ziel": "Blutdruck unter 130/80, Ruhepuls im Zielbereich.", "wirkung": {"Blutdruck/RAAS": 0.4, "Gefaesswand/Aorta/Lunge": 0.25, "Herzrhythmus": 0.3, "Herzmuskel/Hypertrophie": 0.15}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.1], "Gefaesswand/Aorta/Lunge": ["BD", 0.3], "Herzmuskel/Hypertrophie": ["BD", 0.5]}}, {"name": "Amlodipin (Calciumantagonist)", "klasse": "Calciumantagonist", "last": false, "evidenz": "A", "text": "Senkt zentralen Druck und Gefaesssteifigkeit, entlastet also die Aortenwand. ACHTUNG BEI BINDEGEWEBSSCHWAECHE: bei Marfan gibt es Daten, nach denen Calciumantagonisten Aneurysma und Dissektion eher verschlechtern. Wer eine bekannte Bindegewebserkrankung oder eine erweiterte Aortenwurzel hat, klaert das vor der Einnahme ab.", "ziel": "Blutdruck unter 130/80 in Ruhe.", "wirkung": {"Blutdruck/RAAS": 0.5, "Gefaesse/Atherosklerose": 0.2, "Gefaesswand/Aorta/Lunge": 0.2, "Herzmuskel/Hypertrophie": 0.2}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.1], "Gefaesswand/Aorta/Lunge": ["BD", 0.25], "Herzmuskel/Hypertrophie": ["BD", 0.6]}}, {"name": "Ezetimib", "klasse": "Cholesterin-Resorptionshemmer", "last": false, "evidenz": "A", "text": "Rund 20 Prozent LDL-Senkung auf der Aufnahmeseite statt der Syntheseseite. KOPPLUNG: wirkt ausschliesslich ueber das LDL, deshalb Rest 0 in beiden Kategorien - IMPROVE-IT zeigte den Nutzen exakt proportional zur erreichten LDL-Senkung.", "ziel": "LDL unter 1,8 mmol/l, meist erst zusammen mit einem Statin erreichbar.", "wirkung": {"Blutfette-LDL": 0.2, "Gefaesse/Atherosklerose": 0.12}, "kopplung": {"Blutfette-LDL": ["LDL", 0.0], "Gefaesse/Atherosklerose": ["LDL", 0.0]}}, {"name": "Salzreduktion", "klasse": "Ernaehrung", "last": false, "evidenz": "A", "text": "Kostet nichts und wirkt zuverlaessig, besonders bei den salzsensitiven Genotypen dieser Kategorie.", "ziel": "Blutdruck unter 130/80.", "wirkung": {"Blutdruck/RAAS": 0.2, "Gefaesswand/Aorta/Lunge": 0.1}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.1], "Gefaesswand/Aorta/Lunge": ["BD", 0.2]}}, {"name": "GLP-1- oder GLP-1/GIP-Agonist", "klasse": "Inkretin", "last": false, "evidenz": "A", "text": "BESONDERHEITEN: Tirzepatid staerker als Semaglutid, Retatrutid nochmal staerker, aber noch nicht zugelassen. Im Defizit geht Magermasse mit runter. KOPPLUNG: bei normalem Blutzucker faellt die Glukosewirkung weg, die Leberwirkung nicht - die Reduktion des Leberfetts laeuft ueber den Gewichtsverlust. Der Gefaessnutzen bleibt zu 60 Prozent stehen, in SELECT profitierten auch Menschen ohne Diabetes.", "ziel": "Nuechternglukose unter 93 mg/dl, Triglyzeride unter 1,2 mmol/l.", "wirkung": {"Blutdruck/RAAS": 0.2, "Blutfette-HDL": 0.1, "Blutfette-TG": 0.3, "Gefaesse/Atherosklerose": 0.15, "Leber allgemein": 0.38, "Glukosestoffwechsel": 0.5}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.25], "Blutfette-HDL": ["HDL", 0.3], "Blutfette-TG": ["TG", 0.3], "Glukosestoffwechsel": ["GLU", 0.0]}}, {"name": "Berberin oder Metformin", "klasse": "Insulinsensitizer", "last": false, "evidenz": "B", "text": "BESONDERHEITEN: Berberin ist frei verkaeuflich und in der Szene Standard, die Datenlage besteht aber ueberwiegend aus kleinen, methodisch schwachen Studien. Metformin ist gut belegt, gilt hier aber als oldschool.", "ziel": "Nuechternglukose unter 93 mg/dl.", "wirkung": {"Blutfette-LDL": 0.1, "Blutfette-TG": 0.08, "Leber allgemein": 0.08, "Glukosestoffwechsel": 0.28}, "kopplung": {"Blutfette-LDL": ["LDL", 0.0], "Blutfette-TG": ["TG", 0.0], "Glukosestoffwechsel": ["GLU", 0.0]}}, {"name": "Leber-Supplemente (TUDCA, NAC)", "klasse": "Leber-Supplement", "last": false, "evidenz": "C", "text": "WICHTIG: diese Zeile senkt den Oral-Abzug NICHT. Es gibt keine belastbaren Humandaten, dass TUDCA oder NAC den Schaden 17-alpha-alkylierter Substanzen verhindern. Entkoppelt, weil es fuer die Leber keinen Eingabewert im Blatt gibt.", "ziel": "ALT und AST im Normbereich. Bei Kraftsport sind leichte Erhoehungen auch ohne Leberproblem ueblich.", "wirkung": {"Leber allgemein": 0.2}, "kopplung": {}}, {"name": "Ausdauertraining und Koerperfett runter", "klasse": "Lifestyle", "last": false, "evidenz": "A", "text": "Das Mittel mit der besten Datenlage auf diesem Blatt, und das einzige mit einem grossen Psyche-Plus. Wirkt bei Depression in der Groessenordnung einer medikamentoesen Behandlung und kostet nichts ausser Zeit.", "ziel": "HDL ueber 1,0 mmol/l, Triglyzeride unter 1,2, Blutdruck unter 130/80.", "wirkung": {"Blutdruck/RAAS": 0.25, "Blutfette-HDL": 0.3, "Blutfette-TG": 0.35, "Gefaesse/Atherosklerose": 0.1, "Gefaesswand/Aorta/Lunge": 0.15, "Psyche": 0.35, "Herzmuskel/Hypertrophie": 0.3, "Leber allgemein": 0.25, "Glukosestoffwechsel": 0.4}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.35], "Blutfette-HDL": ["HDL", 0.3], "Blutfette-TG": ["TG", 0.3], "Gefaesswand/Aorta/Lunge": ["BD", 0.4], "Glukosestoffwechsel": ["GLU", 0.35]}}, {"name": "OTC-Stack komplett", "klasse": "OTC-Stack", "last": false, "evidenz": "B/C", "text": "ENTHAELT: Citrus-Bergamotte und Monacolin K auf LDL und HDL, hochdosiertes Omega-3 auf die Triglyzeride, Berberin auf die Glukose, L-Citrullin, Nitrat, Kalium und Taurin auf den Blutdruck, TUDCA und NAC auf die Leber. WER DIE EINZELPOSTEN SCHON ANGEHAKT HAT, HAKT DEN STACK NICHT ZUSAETZLICH AN. Monacolin K IST Lovastatin: nie zusaetzlich zu einem Statin, in der EU seit 2022 unter 3 mg begrenzt, Verbot 2026 auf dem Weg.", "ziel": "LDL unter 2,5 und Triglyzeride unter 1,2 mmol/l. Schafft der Stack das nicht, ist es ein Fall fuer ein Statin - nicht fuer die naechste Dose.", "wirkung": {"Blutdruck/RAAS": 0.15, "Blutfette-LDL": 0.3, "Blutfette-HDL": 0.2, "Blutfette-TG": 0.35, "Psyche": 0.1, "Leber allgemein": 0.2, "Glukosestoffwechsel": 0.25}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.15], "Blutfette-LDL": ["LDL", 0.0], "Blutfette-HDL": ["HDL", 0.0], "Blutfette-TG": ["TG", 0.1], "Glukosestoffwechsel": ["GLU", 0.0]}}, {"name": "Omega-3 hochdosiert", "klasse": "Omega-3", "last": false, "evidenz": "A", "text": "BESONDERHEIT: reines EPA (Icosapent Ethyl) hebt das LDL nicht an und ist das einzige Omega-3-Praeparat mit positiver Endpunktstudie. KOPPLUNG: der Gefaessnutzen aus REDUCE-IT liess sich nur zum Teil ueber die Triglyzeridsenkung erklaeren, deshalb bleibt er weitgehend entkoppelt.", "ziel": "Triglyzeride unter 1,2 mmol/l.", "wirkung": {"Blutfette-TG": 0.32, "Gefaesse/Atherosklerose": 0.06, "Psyche": 0.15}, "kopplung": {"Blutfette-TG": ["TG", 0.1]}}, {"name": "Tadalafil niedrig dosiert", "klasse": "PDE5-Hemmer", "last": false, "evidenz": "C", "text": "Taeglich niedrig dosiert verbessert es die Endothelfunktion und senkt den Blutdruck leicht. Die Daten zur Hypertrophie stammen aus kleinen Studien, daher Stufe C.", "ziel": "Blutdruck unter 130/80. Als alleinige Massnahme reicht es dafuer selten.", "wirkung": {"Blutdruck/RAAS": 0.15, "Gefaesse/Atherosklerose": 0.1, "Herzmuskel/Hypertrophie": 0.1}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.3]}}, {"name": "Cabergolin oder P5P", "klasse": "Prolaktin", "last": false, "evidenz": "B", "text": "Holt Stimmung und Libido zurueck, wenn ein hohes Prolaktin der Grund war. Cabergolin selbst kann dafuer Impulskontrolle und Schlaf stoeren - niedrig dosieren, und nur mit gemessenem Prolaktin.", "ziel": "Prolaktin im Normbereich.", "wirkung": {"Psyche": 0.2}, "kopplung": {}}, {"name": "ACE-Hemmer", "klasse": "RAAS-Blocker", "last": false, "evidenz": "A", "text": "Gleiche Kaskade wie das Sartan, eine Stufe frueher. Reizhusten ist der haeufigste Wechselgrund. ZUR NIERE: ACE-Hemmer sind entgegen einer verbreiteten Annahme genauso nierenprotektiv wie Sartane - das ist eine der am besten belegten Indikationen ueberhaupt (Captopril-Studie, REIN, AIPRI), und die Leitlinien fuehren beide Klassen dafuer gleichwertig. Der Unterschied liegt bei Husten und Angiooedem, nicht an der Niere. Deshalb hier dieselben Werte wie beim Sartan.", "ziel": "Blutdruck unter 130/80 in Ruhe.", "wirkung": {"Blutdruck/RAAS": 0.52, "Gefaesswand/Aorta/Lunge": 0.2, "Herzmuskel/Hypertrophie": 0.3, "Nierenfunktion": 0.2}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.15], "Gefaesswand/Aorta/Lunge": ["BD", 0.3], "Herzmuskel/Hypertrophie": ["BD", 0.5]}}, {"name": "Sartan (ARB)", "klasse": "RAAS-Blocker", "last": false, "evidenz": "A", "text": "BESONDERHEIT TELMISARTAN: partielle PPAR-gamma-Aktivitaet, daher ein kleiner Stoffwechselbonus, den die anderen Sartane nicht haben, dazu 24 Stunden Wirkdauer. KOPPLUNG: am Herzmuskel bleibt die Haelfte auch bei gutem Blutdruck stehen - die Massenreduktion geht nachweislich ueber den reinen Druckeffekt hinaus. Die Niere ist ganz entkoppelt, die Nierenprotektion haengt nicht am Ausgangsdruck.", "ziel": "Blutdruck unter 130/80 in Ruhe, an mehreren Tagen gemessen, nicht direkt nach dem Training.", "wirkung": {"Blutdruck/RAAS": 0.55, "Gefaesswand/Aorta/Lunge": 0.25, "Herzmuskel/Hypertrophie": 0.35, "Nierenfunktion": 0.2}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.15], "Gefaesswand/Aorta/Lunge": ["BD", 0.3], "Herzmuskel/Hypertrophie": ["BD", 0.5]}}, {"name": "SERM (Tamoxifen, Raloxifen, Enclomifen)", "klasse": "SERM", "last": false, "evidenz": "B", "text": "Halbes Gesundheitsplus wie der Aromatasehemmer, dafuer Minus beim Muskelaufbau - und ein Psyche-Minus: Stimmungstief, Reizbarkeit und Sehstoerungen sind bei Clomifen haeufig, bei Tamoxifen seltener.", "ziel": "Bruestgewebe ruhig, E2 im Zielbereich - NICHT gecrasht.", "wirkung": {"Aromatase/E2": 0.33, "Psyche": -0.25}, "kopplung": {}}, {"name": "SGLT2-Hemmer", "klasse": "SGLT2", "last": false, "evidenz": "A", "text": "BESONDERHEIT: hebt den Haematokrit um 2 bis 4 Prozentpunkte - auf Kur die falsche Richtung, deshalb die Minuszeile. KOPPLUNG: Niere und Herzmuskel sind ENTKOPPELT. Der Nutzen bei Herzinsuffizienz und Nierenerkrankung ist in DAPA-HF, EMPEROR, DAPA-CKD und EMPA-KIDNEY auch bei Menschen ohne Diabetes belegt - er haengt also nicht am Blutzucker. Nur die Glukosewirkung selbst ist gekoppelt.", "ziel": "Nuechternglukose unter 93 mg/dl bzw. HbA1c unter 5,7. Haematokrit gegenchecken, er steigt unter SGLT2.", "wirkung": {"Blutdruck/RAAS": 0.2, "Herzmuskel/Hypertrophie": 0.2, "Haematokrit/Blutdicke": -0.35, "Nierenfunktion": 0.3, "Glukosestoffwechsel": 0.35}, "kopplung": {"Blutdruck/RAAS": ["BD", 0.2], "Glukosestoffwechsel": ["GLU", 0.1]}}, {"name": "PCSK9-Hemmer oder Inclisiran", "klasse": "Statin/PCSK9", "last": false, "evidenz": "A", "text": "PCSK9-Hemmer senken zusaetzlich Lp(a) - das kann sonst nichts auf diesem Blatt. Wegen der Kosten werden sie aber nur an Statin-Nonresponder oder bei Unvertraeglichkeit verschrieben; rund 95 Prozent bekommen ein Statin und sonst nichts. Deshalb steht der PCSK9-Hemmer hier in derselben Klasse wie das Statin: Es zaehlt der staerkere von beiden, nicht beide zusammen. BESONDERHEIT: derzeit das einzige Mittel, das Lp(a) ueberhaupt senkt. KOPPLUNG: die Lp(a)-Wirkung ist entkoppelt, weil es fuer Lp(a) keinen Eingabewert gibt - sie bleibt also immer voll stehen.", "ziel": "LDL unter 1,4 mmol/l. Lp(a) sinkt nur um 20 bis 25 Prozent - ein hoher Ausgangswert bleibt auch danach hoch.", "wirkung": {"Blutfette-LDL": 0.6, "Blutfette-Lp(a)": 0.22, "Gefaesse/Atherosklerose": 0.4}, "kopplung": {"Blutfette-LDL": ["LDL", 0.0], "Gefaesse/Atherosklerose": ["LDL", 0.1]}}, {"name": "Statin", "klasse": "Statin/PCSK9", "last": false, "evidenz": "A", "text": "BESONDERHEITEN: Rosuvastatin und Atorvastatin sind die potentesten, Pravastatin das vertraeglichste bei Muskelproblemen, Simvastatin das mit dem hoechsten Myopathierisiko. Monacolin K aus rotem Reis IST Lovastatin - nie zusaetzlich zu einem verschriebenen Statin. KOPPLUNG: auch der Plaque-Nutzen haengt am LDL, nur rund 10 Prozent laufen ueber die pleiotropen Effekte. Bei LDL unter 1,7 bringt ein Statin deshalb praktisch nichts mehr.", "ziel": "LDL unter 1,8 mmol/l (70 mg/dl). Non-Responder gibt es wirklich - ohne Kontrollwert nach 6 bis 8 Wochen sind diese Punkte nur eine Annahme.", "wirkung": {"Blutfette-LDL": 0.6, "Gefaesse/Atherosklerose": 0.35, "Glukosestoffwechsel": -0.08}, "kopplung": {"Blutfette-LDL": ["LDL", 0.0], "Gefaesse/Atherosklerose": ["LDL", 0.1]}}, {"name": "ASS niedrig dosiert", "klasse": "Thrombozytenhemmer", "last": false, "evidenz": "A", "text": "Wirkt auf Blutplaettchen, also auf die arterielle Seite. Gegen die venoesen Gerinnungsvarianten dieser Kategorie richtet es fast nichts aus.", "ziel": "Kein Laborziel.", "wirkung": {"Gefaesse/Atherosklerose": 0.12, "Thrombose/Blutgerinnung": 0.08}, "kopplung": {}}, {"name": "Nandrolon", "klasse": "19-Nor", "last": true, "evidenz": "B", "text": "19-Nor. PROLAKTIN ist der Punkt, den die Liste noch nicht als Kategorie hat - Cabergolin oder P5P gehoeren hier ins Blickfeld, ebenso die progestogene Wirkung. Auf die Blutfette vergleichsweise moderat (rund 25 Prozent HDL-Abfall in einer Crossover-Studie), am Herzmuskel dagegen der auffaelligste der Injizierbaren.", "ziel": "Prolaktin im Normbereich, HDL ueber 1,0.", "wirkung": {"Blutdruck/RAAS": -0.15, "Blutfette-HDL": -0.25, "Gefaesswand/Aorta/Lunge": -0.15, "Psyche": -0.3, "Herzmuskel/Hypertrophie": -0.35, "Haematokrit/Blutdicke": -0.2}, "kopplung": {}}, {"name": "Trenbolon", "klasse": "19-Nor", "last": true, "evidenz": "B", "text": "Der Stoff mit dem breitesten Schadensprofil auf diesem Blatt. 19-Nor, aromatisiert nicht (deshalb der E2-Eintrag: fehlendes Estrogen ist fuer Blutfette und Gelenke ein Nachteil, nicht nur fuer die Libido), starke Prolaktin- und Progesteronwirkung, in Fallberichten und Tiermodellen Hinweise auf Nierenschaedigung und Kardiomyopathie. Dazu Schlafstoerungen und Blutdruck. Wer den Score sehen will, ohne ihn zu veraendern, hakt genau diese Zeile an und aus.", "ziel": "Kein Zielwert macht das gut. Wenn ueberhaupt: Cystatin C unter 0,90, HDL ueber 1,0, Blutdruck unter 130/80, Prolaktin normal.", "wirkung": {"Aromatase/E2": -0.2, "Blutdruck/RAAS": -0.3, "Blutfette-HDL": -0.6, "Gefaesswand/Aorta/Lunge": -0.2, "Psyche": -0.45, "Herzrhythmus": -0.25, "Herzmuskel/Hypertrophie": -0.45, "Haematokrit/Blutdicke": -0.25, "Nierenfunktion": -0.4}, "kopplung": {}}, {"name": "Alkohol (5 Bier pro Tag)", "klasse": "Alkohol", "last": true, "evidenz": "A", "text": "Fuenf Bier taeglich sind rund 100 g Reinalkohol am Tag und damit etwa 700 g die Woche. Ab 350 g die Woche kostet Alkohol rund vier bis fuenf Jahre Lebenserwartung ab 40 - das ist die Groessenordnung, in der hier gerechnet wird, und die Menge liegt beim Doppelten dieser Schwelle. Blutdruck steigt dosisabhaengig um grob 1 mmHg je 10 g am Tag, Triglyzeride reagieren stark, Vorhofflimmern und die alkoholische Kardiomyopathie kommen bei dieser Dauerlast dazu, und die Leber ist das Organ, das zuerst nachgibt. KEIN HDL-PLUS: Alkohol hebt das HDL messbar, aber Mendelsche Randomisierung zeigt, dass dieses HDL nicht schuetzt. Ein Pluszeichen dafuer waere geschoent. NICHT ABGEBILDET: Krebs - Alkohol ist als Gruppe-1-Karzinogen eingestuft, das Modell hat dafuer keine Kategorie.", "ziel": "Unter 100 g Reinalkohol pro Woche, das sind rund vier bis fuenf Bier die WOCHE. Fuenf am Tag sind das Sieben- bis Zehnfache davon.", "wirkung": {"Blutdruck/RAAS": -0.45, "Blutfette-TG": -0.5, "Gefaesse/Atherosklerose": -0.15, "Gefaesswand/Aorta/Lunge": -0.2, "Psyche": -0.45, "Herzrhythmus": -0.4, "Herzmuskel/Hypertrophie": -0.35, "Leber allgemein": -0.65, "Glukosestoffwechsel": -0.3}, "kopplung": {}}, {"name": "Testosteron", "klasse": "Basis", "last": true, "evidenz": "A", "text": "DIE GRUNDLAST. Sie steckt bereits im Gesamt-Load oben und bekommt deshalb hier keine eigenen Faktoren - sonst waere sie doppelt gezaehlt. Alle folgenden Zeilen zeigen, was eine Substanz ZUSAETZLICH zu Testosteron auf einzelne Systeme legt. Testosteron aromatisiert, und das ist fuer die Blutfette ein Vorteil: in Studien verschlechterte gerade das BLOCKIEREN der Aromatase das Lipidprofil.", "ziel": "Haematokrit unter 47, HDL ueber 1,0, Blutdruck unter 130/80.", "wirkung": {}, "kopplung": {}}, {"name": "Clenbuterol", "klasse": "Beta-2-Agonist", "last": true, "evidenz": "C", "text": "Zwei Gesichter. Als Beta-2-Agonist verbrennt er Fett und verbessert dabei Blutzucker und Triglyzeride - das sind die Pluszeichen. Dem gegenueber stehen Herzrhythmus, Herzmuskel und Psyche: Tremor, Herzrasen, Schlaflosigkeit und Panik. Baut ausser Fett auch Muskel ab.", "ziel": "Ruhepuls und Rhythmus unauffaellig.", "wirkung": {"Blutfette-LDL": 0.05, "Blutfette-TG": 0.15, "Gefaesswand/Aorta/Lunge": -0.1, "Psyche": -0.3, "Herzrhythmus": -0.4, "Herzmuskel/Hypertrophie": -0.35, "Haematokrit/Blutdicke": -0.1, "Glukosestoffwechsel": 0.15}, "kopplung": {}}, {"name": "Drostanolon", "klasse": "DHT-Derivat", "last": true, "evidenz": "C", "text": "DHT-Derivat, aromatisiert nicht. Typisches Muster der Klasse: HDL runter, Haare und Prostata belastet, Estradiol gedrueckt. Der E2-Eintrag ist kein Tippfehler - zu wenig Estrogen ist ebenfalls ein Problem.", "ziel": "HDL ueber 1,0.", "wirkung": {"Aromatase/E2": -0.15, "Blutfette-HDL": -0.35, "Haematokrit/Blutdicke": -0.15}, "kopplung": {}}, {"name": "Primobolan (Methenolon)", "klasse": "DHT-Derivat", "last": true, "evidenz": "C", "text": "Der mildeste der gaengigen Injizierbaren - aber nicht neutral am Oestrogen: Methenolon draengt E2 staerker nach unten als Drostanolon. Zu tiefes E2 ist kein Gewinn, sondern kostet Gelenke, Knochendichte, Libido und HDL, deshalb steht hier ein Minus und kein Plus. Ansonsten weniger auffaellig als der Rest der Klasse, was ihn nicht harmlos macht.", "ziel": "HDL ueber 1,0.", "wirkung": {"Aromatase/E2": -0.25, "Blutfette-HDL": -0.2, "Haematokrit/Blutdicke": -0.15}, "kopplung": {}}, {"name": "DNP", "klasse": "Entkoppler", "last": true, "evidenz": "A", "text": "KEIN PUNKTWERT AUF DIESEM BLATT BILDET DAS RICHTIG AB. DNP entkoppelt die Zellatmung; die toedliche Dosis liegt nah an der wirksamen, und es gibt keinen Gegenspieler. Todesfaelle sind aus normalen Anwendungsdosen dokumentiert, nicht nur aus Ueberdosierungen. Die Zeile steht hier, damit der Score nicht so tut, als waere die Substanz kostenlos - nicht, weil sich das Risiko in Punkten ausdruecken liesse.", "ziel": "Es gibt hier keinen Zielwert, der das sicher macht.", "wirkung": {"Psyche": -0.3, "Herzrhythmus": -0.6, "Nierenfunktion": -0.4, "Leber allgemein": -0.4}, "kopplung": {}}, {"name": "Insulin", "klasse": "Insulin", "last": true, "evidenz": "A", "text": "Das eigentliche Risiko bildet dieser Score NICHT ab: eine Unterzuckerung kann innerhalb von Stunden toedlich sein, unabhaengig von jedem Punktwert hier. Der Eintrag steht fuer die laengerfristige Stoffwechselwirkung.", "ziel": "Nuechternglukose unter 93 mg/dl.", "wirkung": {"Glukosestoffwechsel": -0.25}, "kopplung": {}}, {"name": "Methandienon", "klasse": "Oral 17-aa", "last": true, "evidenz": "B", "text": "ORAL, 17-alpha-alkyliert: zusaetzlich oben den Oral-Schalter setzen. Aromatisiert stark, daher der E2-Eintrag und die Wassereinlagerung, die den Blutdruck treibt.", "ziel": "ALT und AST im Rahmen, Blutdruck unter 130/80, E2 im Zielbereich.", "wirkung": {"Aromatase/E2": -0.35, "Blutdruck/RAAS": -0.3, "Blutfette-LDL": -0.2, "Blutfette-HDL": -0.45, "Gefaesswand/Aorta/Lunge": -0.1, "Psyche": -0.15, "Haematokrit/Blutdicke": -0.2, "Leber allgemein": -0.4}, "kopplung": {}}, {"name": "Oxandrolon", "klasse": "Oral 17-aa", "last": true, "evidenz": "B", "text": "Der leberfreundlichste der 17-alpha-alkylierten - deshalb hier weniger Leberminus als bei den anderen. Dafuer ein eigenes Nierenthema: Kreatininanstieg und Belastung der Niere sind gut dokumentiert und werden gern als 'nur mehr Muskelmasse' wegerklaert. Das Lipidprofil bleibt uebel.", "ziel": "HDL ueber 1,0, ALT und AST im Rahmen.", "wirkung": {"Blutfette-LDL": -0.2, "Blutfette-HDL": -0.5, "Gefaesswand/Aorta/Lunge": -0.1, "Psyche": -0.1, "Haematokrit/Blutdicke": -0.1, "Nierenfunktion": -0.2, "Leber allgemein": -0.15}, "kopplung": {}}, {"name": "Oxymetholon", "klasse": "Oral 17-aa", "last": true, "evidenz": "B", "text": "ORAL, 17-alpha-alkyliert: zusaetzlich oben den Oral-Schalter setzen. Auf die Leber und den Haematokrit der haerteste der gaengigen Orale, dazu Wassereinlagerung und Blutdruck.", "ziel": "ALT und AST im Rahmen, Haematokrit unter 47, Blutdruck unter 130/80.", "wirkung": {"Blutdruck/RAAS": -0.35, "Blutfette-LDL": -0.25, "Blutfette-HDL": -0.5, "Gefaesswand/Aorta/Lunge": -0.15, "Psyche": -0.25, "Haematokrit/Blutdicke": -0.45, "Leber allgemein": -0.5}, "kopplung": {}}, {"name": "Stanozolol", "klasse": "Oral 17-aa", "last": true, "evidenz": "B", "text": "Der Stoff mit dem deutlichsten Kollagenproblem: verminderte Elastizitaet von Sehnen bis zur Gefaesswand, deshalb hier das groesste Minus der Liste. Dazu das schlechteste Lipidprofil aller gaengigen Oralen.", "ziel": "HDL ueber 1,0, LDL unter 2,5, ALT und AST im Rahmen.", "wirkung": {"Blutfette-LDL": -0.3, "Blutfette-HDL": -0.6, "Gefaesse/Atherosklerose": -0.15, "Gefaesswand/Aorta/Lunge": -0.3, "Psyche": -0.2, "Haematokrit/Blutdicke": -0.15, "Leber allgemein": -0.35}, "kopplung": {}}, {"name": "Turinabol", "klasse": "Oral 17-aa", "last": true, "evidenz": "C", "text": "ORAL, 17-alpha-alkyliert: zusaetzlich oben den Oral-Schalter setzen. Milder als die uebrigen Orale, aromatisiert nicht.", "ziel": "HDL ueber 1,0, ALT und AST im Rahmen.", "wirkung": {"Blutfette-LDL": -0.15, "Blutfette-HDL": -0.35, "Gefaesswand/Aorta/Lunge": -0.1, "Psyche": -0.1, "Haematokrit/Blutdicke": -0.15, "Leber allgemein": -0.25}, "kopplung": {}}, {"name": "Wachstumshormon (hGH)", "klasse": "Peptidhormon", "last": true, "evidenz": "B", "text": "Was bei Akromegalie zu sehen ist - erweiterte Aortenwurzel und undichte Aortenklappe - ist der Grund fuer das Minus an der Gefaesswand. Bei den hier ueblichen Dosen abgeschwaecht, aber in dieselbe Richtung.", "ziel": "Nuechternglukose unter 93 mg/dl bzw. HbA1c unter 5,7.", "wirkung": {"Blutdruck/RAAS": -0.1, "Gefaesswand/Aorta/Lunge": -0.25, "Herzmuskel/Hypertrophie": -0.25, "Glukosestoffwechsel": -0.45}, "kopplung": {}}, {"name": "Rauchen (10 Zigaretten pro Tag)", "klasse": "Rauchen", "last": true, "evidenz": "A", "text": "Der groesste Einzelwert dieser Liste steht bei der Gefaesswand, und das ist kein Versehen: aktuelle Raucher haben ein rund fuenffaches Risiko fuer ein Bauchaortenaneurysma, je zehn Zigaretten taeglich kommt ein Faktor 1,9 dazu. In dieser Kategorie steckt seit dieser Fassung auch die Lunge - Emphysem und Aneurysma sind dieselbe Biologie, zerlegtes Elastin. HERZ UND SCHLAGANFALL SKALIEREN NICHT LINEAR: schon eine Zigarette am Tag traegt rund 46 Prozent des Ueberrisikos von zwanzig. Zehn am Tag sind naeher an einer Schachtel als an der Haelfte, Runterrauchen bringt also weit weniger als es sich anfuehlt. Dazu die Raucherpolyglobulie: Kohlenmonoxid bindet Haemoglobin, der Koerper legt Erythrozyten nach - auf einem System, das der Stack ohnehin hochtreibt. NICHT ABGEBILDET: Krebs. Das Modell kennt keine Krebskategorie, deshalb ist der Wert hier eher zu freundlich als zu hart.", "ziel": "Null. Es gibt keine unbedenkliche Menge.", "wirkung": {"Blutdruck/RAAS": -0.2, "Blutfette-LDL": -0.15, "Blutfette-HDL": -0.3, "Gefaesse/Atherosklerose": -0.6, "Gefaesswand/Aorta/Lunge": -0.7, "Psyche": -0.2, "Herzrhythmus": -0.15, "Herzmuskel/Hypertrophie": -0.2, "Thrombose/Blutgerinnung": -0.45, "Haematokrit/Blutdicke": -0.3, "Nierenfunktion": -0.25, "Glukosestoffwechsel": -0.2}, "kopplung": {}}, {"name": "SARM (RAD-140, LGD-4033, Ostarin)", "klasse": "SARM", "last": true, "evidenz": "C", "text": "Werden als milde Alternative verkauft und sind es nicht. Zu mehreren Vertretern gibt es Fallberichte ueber schwere Leberschaeden, das HDL faellt aehnlich deutlich wie unter Oralen. Keiner davon ist als Arzneimittel zugelassen, die Produktqualitaet auf dem grauen Markt ist entsprechend unklar.", "ziel": "HDL ueber 1,0, ALT und AST im Rahmen.", "wirkung": {"Blutfette-LDL": -0.15, "Blutfette-HDL": -0.4, "Psyche": -0.15, "Haematokrit/Blutdicke": -0.15, "Leber allgemein": -0.3}, "kopplung": {}}, {"name": "T3 (Liothyronin)", "klasse": "Schilddruesenhormon", "last": true, "evidenz": "B", "text": "Baut nicht nur Fett ab, sondern auch Muskel - daher der Minuseintrag beim Muskelaufbau. Am Herzen Rhythmusstoerungen und bei Dauergebrauch Hypertrophie. Nach dem Absetzen braucht die eigene Achse Zeit.", "ziel": "TSH, fT3 und fT4 im Normbereich, Ruhepuls unauffaellig.", "wirkung": {"Psyche": -0.25, "Herzrhythmus": -0.3, "Herzmuskel/Hypertrophie": -0.2}, "kopplung": {}}, {"name": "Boldenon", "klasse": "Sonstige AAS", "last": true, "evidenz": "C", "text": "Treibt die Erythropoese staerker als die meisten anderen. Wer Boldenon faehrt, kontrolliert den Haematokrit engmaschig und plant die Blutspende von vornherein ein. Auf die Blutfette vergleichsweise freundlich.", "ziel": "Haematokrit unter 47 - hier der entscheidende Wert.", "wirkung": {"Blutfette-HDL": -0.15, "Gefaesswand/Aorta/Lunge": -0.1, "Psyche": -0.2, "Haematokrit/Blutdicke": -0.55, "Nierenfunktion": -0.2}, "kopplung": {}}], "k": {"bezug": 80.0, "iBoden": 0.05, "schaerfe": 1.15, "kette": 1.0, "stapel": 1.5, "loadGemessen": 0.25, "endlevel": 4.0, "budget": 97.0, "basisalter": 20, "jahrLinear": 0.005, "jahrZins": 1.005, "anfangsalter": 18, "lebenserwartung": 88, "uhrEnde": 130, "topN": 6}}, K=D.k;
+// Der Auslieferungszustand. Die Reset-Knoepfe stellen genau das wieder her,
+// und die Bedienelemente im HTML stehen von Hand auf denselben Werten.
+const VORGABE={load:0,art:0,dauer:2,alter:30};
+const S={load:VORGABE.load,art:VORGABE.art,dauer:VORGABE.dauer,
+         alter:VORGABE.alter,mess:{},laeuft:{},geplant:{}};
+const A=i=>Math.pow((K.bezug/100)/Math.max(K.iBoden,1-i),K.schaerfe);
+const jf=a=>(1+K.jahrLinear*(a-K.basisalter))*Math.pow(K.jahrZins,a-K.basisalter);
+const katVon={}; D.blut.forEach(b=>katVon[b.code]=b.kat);
+
+function rechne(mitGeplant, extra){
+  const lf=1+(D.load[S.load].v-1)*D.art[S.art].v;
+  let summe=0, endl=0; const teile=[];
+  for(const kat of D.kats){
+    const mb=S.mess[kat.name];              // Bandindex oder undefined
+    let io;
+    if(mb!==undefined && mb>=0){
+      if(mb===3){io=1; endl++;}
+      else{const b=0.75*D.messIndex[mb]+0.25*D.idxBasis;
+        io=Math.min(1,1-Math.pow(1-b,1+(lf-1)*kat.sens*K.loadGemessen));}
+    }else io=Math.min(1,1-Math.pow(1-D.idxBasis,1+(lf-1)*kat.sens));
+    const nut={},las={};
+    for(const s of D.subs){
+      const an=S.laeuft[s.name], gp=(mitGeplant&&S.geplant[s.name])||(extra===s.name);
+      if(!an&&!gp) continue;
+      const f=s.wirkung[kat.name]; if(f===undefined) continue;
+      if(f<0){las[s.klasse]=Math.min(f,las[s.klasse]===undefined?0:las[s.klasse]);continue;}
+      let fk=f;
+      if(an && (mb===undefined||mb<0)){ /* laeuft, ungemessen: ungedaempft */ }
+      else if(gp){
+        const kop=s.kopplung[kat.name];
+        if(kop&&kop[1]<1){const mk=katVon[kop[0]], mbb=mk?S.mess[mk]:undefined;
+          const st=(mbb!==undefined&&mbb>=0)?D.massnahmeStufe[mbb]:1;
+          fk=f*(kop[1]+(1-kop[1])*st);}
+      } else continue;
+      nut[s.klasse]=Math.max(fk,nut[s.klasse]===undefined?0:nut[s.klasse]);
+    }
+    let N=1,L=1;
+    for(const kl in nut) N*=(1-nut[kl]);
+    for(const kl in las) L*=(1-las[kl]);
+    const ie=Math.min(1,(1-Math.pow(1-io,Math.pow(L,K.stapel)))*N);
+    const t=kat.w/100*Math.pow(A(ie),K.kette);
+    summe+=t; teile.push({kat:kat,idx:ie,g:kat.w/100*A(ie)});
+  }
+  const p=K.endlevel*endl;
+  const zu=Math.pow((K.bezug/100)/Math.max(K.iBoden,K.bezug/100-p/100),K.schaerfe);
+  const M=Math.pow(summe,1/K.kette)*zu;
+  return {M:M, punkte:Math.max(0,Math.min(100,K.bezug/Math.pow(M,1/K.schaerfe))),
+          teile:teile};
+}
+function endalter(M){
+  const j=D.dauer[S.dauer].j, a0=S.alter; let kum=0;
+  for(let a=K.anfangsalter;a<=K.uhrEnde;a++){
+    const v=jf(a)*((a>=a0&&a<a0+j)?M:1);
+    if(kum+v>=K.budget) return a+(K.budget-kum)/v;
+    kum+=v;
+  }
+  return K.uhrEnde;
+}
+// Was jede einzelne Massnahme ZUSAETZLICH zu allem Angehakten braechte.
+// Anders als in der Excel-Mappe ist das hier exakt und keine Naeherung: es
+// wird schlicht das ganze Modell noch einmal gerechnet.
+function gewinne(basis){
+  const g={};
+  for(const s of D.subs){
+    if(s.last||S.laeuft[s.name]||S.geplant[s.name]) continue;
+    let nutzt=false; for(const kk in s.wirkung) if(s.wirkung[kk]>0){nutzt=true;break;}
+    if(!nutzt) continue;
+    g[s.name]=rechne(true,s.name).punkte-basis;
+  }
+  return g;
+}
+function plan(gew){
+  const roh=[];
+  for(const s of D.subs){
+    if(gew[s.name]!==undefined&&gew[s.name]>0.05) roh.push({s:s,g:gew[s.name]});
+  }
+  roh.sort((a,b)=>b.g-a.g);
+  const gesehen={}, out=[];
+  for(const e of roh){
+    if(gesehen[e.s.klasse]!==undefined){
+      const o=out[gesehen[e.s.klasse]]; if(!o.alt) o.alt=e.s.name; continue;}
+    gesehen[e.s.klasse]=out.length; out.push({name:e.s.name,klasse:e.s.klasse,g:e.g});
+  }
+  return out.slice(0,K.topN);
+}
+function zeichne(){
+  const jetzt=rechne(false), nach=rechne(true);
+  const eJ=endalter(jetzt.M), eN=endalter(nach.M);
+  document.getElementById('eJetzt').textContent=Math.round(eJ);
+  document.getElementById('eNach').textContent=Math.round(eN);
+  document.getElementById('pkt').textContent=
+    (eN-eJ>=0.5)?('+'+(eN-eJ).toFixed(1)+' Jahre durch die geplanten Massnahmen'):'';
+  // Systeme
+  const sortiert=jetzt.teile.slice().sort((a,b)=>b.g-a.g);
+  const top3=sortiert.slice(0,3).map(t=>t.kat.name);
+  const ges=jetzt.teile.reduce((s,t)=>s+t.g,0);
+  document.getElementById('sys').innerHTML=jetzt.teile.map(t=>{
+    const p=Math.round(100*t.g/ges), rot=top3.indexOf(t.kat.name)>=0;
+    const f=t.idx<0.34?'#0b7a3b':t.idx<0.67?'#c58b00':'#b42318';
+    return '<div class="sys'+(rot?' top3':'')+'"><span class="nm">'+t.kat.kurz+
+      '</span><span class="bar"><i style="width:'+Math.round(t.idx*100)+
+      '%;background:'+f+'"></i></span><span class="v">'+p+'%</span></div>';}).join('');
+  document.getElementById('glied').textContent=sortiert[0].kat.name+
+    ' – '+Math.round(100*sortiert[0].g/ges)+' % vom Tempo';
+  // Plan
+  const gew=gewinne(nach.punkte), pl=plan(gew);
+  document.getElementById('plan').innerHTML= pl.length? pl.map((e,i)=>
+    '<div class="'+(i<3?'top':'')+'"><span class="n">'+(i+1)+'. '+e.name+
+    '<span class="k">'+e.klasse+(e.alt?' · Alternative: '+e.alt:'')+'</span></span>'+
+    '<span class="g">+'+e.g.toFixed(1)+'</span></div>').join('')
+    : '<div><span class="n">Nichts mehr zu holen – alles Sinnvolle ist angehakt.</span></div>';
+  // Gewinn je Substanz
+  // Zahl je Substanz, Rangfarbe fuer die ersten drei, und die Liste ordnet
+  // sich nach dem, was gerade am meisten braechte.
+  const rang={}; pl.slice(0,3).forEach((e,i)=>rang[e.name]=i+1);
+  const box=document.getElementById('schutz');
+  const zeilen=[].slice.call(box.children);
+  zeilen.forEach(z=>{
+    const n=z.getAttribute('data-name'), g=gew[n];
+    z.querySelector('.gewinn').textContent=(g!==undefined&&g>0.05)?('+'+g.toFixed(1)):'';
+    z.querySelector('.rz').textContent=rang[n]||'';
+    z.className='sub'+(rang[n]?' rang':'');
+    // aktiv zuerst, dann nach Gewinn, dann der Rest in alter Reihenfolge
+    z._s=(S.laeuft[n]||S.geplant[n])?1e6:(g!==undefined?g:-1);
+  });
+  zeilen.sort((a,b)=>b._s-a._s||a.getAttribute('data-i')-b.getAttribute('data-i'));
+  zeilen.forEach(z=>box.appendChild(z));
+}
+// Zuruecksetzen. Jeder Block raeumt genau das weg, was in ihm steht; 'alles'
+// macht die Seite wieder wie frisch geoeffnet. Der Zustand und die
+// Bedienelemente werden zusammen gesetzt, damit beide nicht auseinanderlaufen.
+function schalter(){
+  var t=document.querySelectorAll('.tog');
+  for(var i=0;i<t.length;i++){
+    var z=t[i].closest('.sub'); if(!z) continue;
+    var n=z.getAttribute('data-name');
+    var an=(t[i].getAttribute('data-t')==='l')?S.laeuft[n]:S.geplant[n];
+    if(an) t[i].classList.add('an'); else t[i].classList.remove('an');
+  }
+}
+function reset(was){
+  var i, e;
+  if(was==='lauf'||was==='alles'){
+    S.load=VORGABE.load; S.art=VORGABE.art;
+    S.dauer=VORGABE.dauer; S.alter=VORGABE.alter;
+    document.getElementById('load').value=S.load;
+    document.getElementById('art').value=S.art;
+    document.getElementById('dauer').value=S.dauer;
+    document.getElementById('alter').value=S.alter;
+  }
+  if(was==='blut'||was==='alles'){
+    S.mess={};
+    e=document.querySelectorAll('[data-blut]');
+    for(i=0;i<e.length;i++) e[i].value='-1';
+  }
+  if(was==='geplant'||was==='alles') S.geplant={};
+  if(was==='subs'||was==='alles'){
+    S.laeuft={}; S.geplant={};
+    var su=document.getElementById('such');
+    if(su&&su.value){su.value=''; e=document.querySelectorAll('.sub');
+      for(i=0;i<e.length;i++) e[i].style.display='';}
+  }
+  schalter(); zeichne();
+}
+function bau(){
+  // Die Bedienelemente stehen fest im HTML - hier werden sie nur verdrahtet.
+  // Das ist Absicht: wird die Datei in einer Vorschau ohne JavaScript geoeffnet
+  // (iPhone, Mail, Dateien-App), sieht man trotzdem alle Auswahlfelder.
+  const q=id=>document.getElementById(id);
+  S.load=+q('load').value; S.art=+q('art').value;
+  S.dauer=+q('dauer').value; S.alter=+q('alter').value;
+  var rs=document.querySelectorAll('.rs');
+  for(var i=0;i<rs.length;i++) rs[i].disabled=false;
+  document.body.addEventListener('click',function(e){
+    if(!e.target.closest) return;
+    var r=e.target.closest('.rs');
+    if(r){reset(r.getAttribute('data-reset')); return;}
+    var b=e.target.closest('.tog'); if(!b) return;
+    var zeile=b.closest('.sub'); if(!zeile) return;
+    var name=zeile.getAttribute('data-name');
+    var ziel=b.getAttribute('data-t')==='l'?S.laeuft:S.geplant;
+    if(ziel[name]){delete ziel[name];b.classList.remove('an');}
+    else{ziel[name]=1;b.classList.add('an');}
+    zeichne();
+  });
+  document.body.addEventListener('change',function(e){
+    var t=e.target;
+    if(t.id==='load')S.load=+t.value; else if(t.id==='art')S.art=+t.value;
+    else if(t.id==='dauer')S.dauer=+t.value;
+    else if(t.id==='alter')S.alter=Math.max(18,Math.min(80,+t.value||30));
+    else if(t.hasAttribute('data-blut')){
+      var k=t.getAttribute('data-blut'), v=+t.value;
+      if(v<0) delete S.mess[k]; else S.mess[k]=v;
+    } else return;
+    zeichne();
+  });
+  q('such').addEventListener('input',function(e){
+    var f=e.target.value.toLowerCase(), alle=document.querySelectorAll('.sub');
+    for(var i=0;i<alle.length;i++)
+      alle[i].style.display=alle[i].getAttribute('data-name').toLowerCase()
+        .indexOf(f)>=0?'':'none';
+  });
+  zeichne();
+}
+bau();
+</script>
